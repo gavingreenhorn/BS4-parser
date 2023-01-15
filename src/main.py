@@ -18,6 +18,7 @@ from utils import get_soup
 
 PEP_TABLE_STRAINER = SoupStrainer('table')
 PEP_ARTICLE_STRAINER = SoupStrainer('dl')
+log_messages = []
 
 
 def whats_new(session) -> List[tuple]:
@@ -82,11 +83,10 @@ def pep(session) -> List[tuple]:
             if tag.text == "Status:":
                 return tag.find_next_sibling().text
         else:
-            logging.info('Не нашёл актуального статуса в статье')
+            log_messages.append('Не нашёл актуального статуса в статье')
 
     def scrape_table() -> Iterator[str]:
         soup = get_soup(session, PEPS_URL, PEP_TABLE_STRAINER)
-        log_messages = []
         for num, table in enumerate(soup('table'), 1):
             for row in tqdm(table('tr'), desc=f'Processing table {num}'):
                 status_tag, link_tag = row.abbr, row.a
@@ -105,8 +105,6 @@ def pep(session) -> List[tuple]:
                         expected=expected_status,
                         actual=actual_status))
                 yield actual_status
-        for message in log_messages:
-            logging.info(message)
 
     counter = Counter(scrape_table())
     return [('Статус', 'Количество')] + list(counter.items()) \
@@ -137,6 +135,8 @@ def main() -> None:
             logging.error(error)
         if results is not None:
             control_output(results, args)
+    for message in log_messages:
+        logging.info(message)
     logging.info('Парсер завершил работу.')
 
 
