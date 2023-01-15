@@ -10,9 +10,10 @@ from requests_cache import CachedSession
 from tqdm import tqdm
 
 from configs import configure_argument_parser, configure_logging
-from constants import DOWNLOADS_DIR, MAIN_DOC_URL, PEPS_URL, WHATS_NEW_URL
+from constants import BASE_DIR, DOWNLOADS_URL, MAIN_DOC_URL, PEPS_URL
 from constants import EXPECTED_STATUS, UNEXPECTED_STATUS, MISSING_DATA
-from constants import DOWNLOAD_SAVED_AT, ARGUMENTS_MESSAGE
+from constants import DOWNLOAD_SAVED_AT, ARGUMENTS_MESSAGE, WHATS_NEW_URL
+
 from outputs import control_output
 from utils import get_soup
 
@@ -65,11 +66,12 @@ def latest_versions(session) -> List[tuple]:
 
 
 def download(session) -> None:
-    downloads_url = urljoin(MAIN_DOC_URL, 'download.html')
-    soup = get_soup(session, downloads_url)
+    soup = get_soup(session, DOWNLOADS_URL)
+    # константа определяется здесь, чтобы успокоился pytest
+    DOWNLOADS_DIR = BASE_DIR / 'downloads'
     DOWNLOADS_DIR.mkdir(exist_ok=True)
     for link in tqdm(soup.body.select('table.docutils a[href$=".zip"]')):
-        url = urljoin(downloads_url, link['href'])
+        url = urljoin(DOWNLOADS_URL, link['href'])
         f_name = DOWNLOADS_DIR / url.split('/')[-1]
         with open(f_name, 'wb') as file:
             file.write(session.get(url).content)

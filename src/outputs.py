@@ -5,14 +5,16 @@ from datetime import datetime
 
 from prettytable import PrettyTable
 
-from constants import RESULTS_DIR, DATETIME_FORMAT, PRETTY_OUTPUT, FILE_OUTPUT
-from constants import FILE_SAVED_AT
+from constants import BASE_DIR, DATETIME_FORMAT
+from constants import FILE_SAVED_AT, PRETTY_OUTPUT, FILE_OUTPUT
 
 CSV_DIALECT = csv.get_dialect('unix')
 FILE_NAME_TEMPLATE = '{mode}_{datetime}.csv'
 
 
 def file_output(results, cli_args):
+    # константа определяется здесь, чтобы успокоился pytest
+    RESULTS_DIR = BASE_DIR / 'results'
     RESULTS_DIR.mkdir(exist_ok=True)
     file_name = FILE_NAME_TEMPLATE.format(
                     mode=cli_args.mode,

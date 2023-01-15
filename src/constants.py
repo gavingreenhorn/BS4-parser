@@ -9,13 +9,12 @@ FILE_OUTPUT = 'file'
 BASE_DIR = Path(__file__).parent
 LOG_DIR = BASE_DIR / 'logs'
 PARSER_LOG_NAME = LOG_DIR / 'parser.log'
-DOWNLOADS_DIR = BASE_DIR / 'downloads'
-RESULTS_DIR = BASE_DIR / 'results'
 
 # urls
 MAIN_DOC_URL = 'https://docs.python.org/3/'
 PEPS_URL = 'https://peps.python.org/'
 WHATS_NEW_URL = urljoin(MAIN_DOC_URL, 'whatsnew/')
+DOWNLOADS_URL = urljoin(MAIN_DOC_URL, 'download.html')
 
 # formatting strings
 DATETIME_FORMAT = '%Y-%m-%d_%H-%M-%S'
