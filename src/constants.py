@@ -40,8 +40,10 @@ DOWNLOAD_SAVED_AT = 'Архив был загружен и сохранён: {pa
 UNEXPECTED_STATUS = ('Не совпадают статусы для статьи PEP{PEP}. '
                      'Ожидаемые: {expected}, '
                      'действительный {actual}')
-MISSING_DATA = ('В таблице не найден {datapoint} для статьи {PEP}')
+MISSING_DATA = 'В таблице не найден {datapoint} для статьи {PEP}'
+MISSING_STATUS = 'Не найден актуальный статус в статье {PEP}'
 
 # exception messages
+CONNECTION_ERROR_MESSAGE = 'Ошибка соединения при отправке запроса на {url}'
 LOADING_ERROR_MESSAGE = 'Возникла ошибка при загрузке страницы {url}'
 TAG_NOT_FOUND_MESSAGE = 'Не найден тег {tag} {attrs}'

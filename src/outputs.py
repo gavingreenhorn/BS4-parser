@@ -8,7 +8,7 @@ from prettytable import PrettyTable
 from constants import BASE_DIR, DATETIME_FORMAT
 from constants import FILE_SAVED_AT, PRETTY_OUTPUT, FILE_OUTPUT
 
-CSV_DIALECT = csv.get_dialect('unix')
+
 FILE_NAME_TEMPLATE = '{mode}_{datetime}.csv'
 
 
@@ -17,12 +17,12 @@ def file_output(results, cli_args):
     RESULTS_DIR = BASE_DIR / 'results'
     RESULTS_DIR.mkdir(exist_ok=True)
     file_name = FILE_NAME_TEMPLATE.format(
-                    mode=cli_args.mode,
-                    datetime=datetime.strftime(
-                        datetime.now(), DATETIME_FORMAT))
+        mode=cli_args.mode,
+        datetime=datetime.strftime(
+            datetime.now(), DATETIME_FORMAT))
     file_path = RESULTS_DIR / file_name
     with open(file_path, 'w', encoding='utf-8') as file:
-        writer = csv.writer(file, dialect=CSV_DIALECT)
+        writer = csv.writer(file, dialect=csv.unix_dialect)
         writer.writerows(results)
     logging.info(FILE_SAVED_AT.format(path=file_path))
 
