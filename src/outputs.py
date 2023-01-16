@@ -22,8 +22,9 @@ def file_output(results, cli_args):
             datetime.now(), DATETIME_FORMAT))
     file_path = RESULTS_DIR / file_name
     with open(file_path, 'w', encoding='utf-8') as file:
-        writer = csv.writer(file, dialect=csv.unix_dialect)
-        writer.writerows(results)
+        csv.writer(
+            file,
+            dialect=csv.unix_dialect).writerows(results)
     logging.info(FILE_SAVED_AT.format(path=file_path))
 
 

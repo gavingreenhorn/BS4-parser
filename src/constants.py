@@ -11,7 +11,7 @@ LOG_DIR = BASE_DIR / 'logs'
 PARSER_LOG_NAME = LOG_DIR / 'parser.log'
 
 # urls
-MAIN_DOC_URL = 'https://docs.python.org/3/'
+MAIN_DOC_URL = 'https://doks.python.org/3/'
 PEPS_URL = 'https://peps.python.org/'
 WHATS_NEW_URL = urljoin(MAIN_DOC_URL, 'whatsnew/')
 DOWNLOADS_URL = urljoin(MAIN_DOC_URL, 'download.html')
@@ -37,13 +37,16 @@ EXPECTED_STATUS = {
 ARGUMENTS_MESSAGE = 'Аргументы командной строки: {args}'
 FILE_SAVED_AT = 'Файл с результатами был сохранён: {path}'
 DOWNLOAD_SAVED_AT = 'Архив был загружен и сохранён: {path}'
-UNEXPECTED_STATUS = ('Не совпадают статусы для статьи PEP{PEP}. '
-                     'Ожидаемые: {expected}, '
-                     'действительный {actual}')
+UNEXPECTED_STATUS = (
+    'Не совпадают статусы для статьи PEP{PEP}. '
+    'Ожидаемые: {expected}, '
+    'действительный: {actual}')
 MISSING_DATA = 'В таблице не найден {datapoint} для статьи {PEP}'
 MISSING_STATUS = 'Не найден актуальный статус в статье {PEP}'
 
 # exception messages
+BASE_EXCEPTION_MESSAGE = (
+    'Произошла ошибка при исполнении программы '
+    'в режиме {mode}: {error}')
 CONNECTION_ERROR_MESSAGE = 'Ошибка соединения при отправке запроса на {url}'
-LOADING_ERROR_MESSAGE = 'Возникла ошибка при загрузке страницы {url}'
 TAG_NOT_FOUND_MESSAGE = 'Не найден тег {tag} {attrs}'

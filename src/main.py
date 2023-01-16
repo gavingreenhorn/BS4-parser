@@ -1,7 +1,6 @@
 # main.py
 import logging
 import re
-from requests.exceptions import RequestException
 from collections import Counter
 from typing import List, Iterator
 from urllib.parse import urljoin
@@ -11,10 +10,11 @@ from requests_cache import CachedSession
 from tqdm import tqdm
 
 from configs import configure_argument_parser, configure_logging
-from constants import (BASE_DIR, DOWNLOADS_URL, MAIN_DOC_URL, PEPS_URL,
-                       EXPECTED_STATUS, UNEXPECTED_STATUS, MISSING_DATA,
-                       DOWNLOAD_SAVED_AT, ARGUMENTS_MESSAGE, WHATS_NEW_URL,
-                       MISSING_STATUS)
+from constants import (
+    BASE_DIR, DOWNLOADS_URL, MAIN_DOC_URL, PEPS_URL,
+    EXPECTED_STATUS, UNEXPECTED_STATUS, MISSING_DATA,
+    DOWNLOAD_SAVED_AT, ARGUMENTS_MESSAGE, WHATS_NEW_URL,
+    MISSING_STATUS, BASE_EXCEPTION_MESSAGE)
 from outputs import control_output
 from utils import get_soup, ParserStatusMissingException
 
@@ -23,21 +23,21 @@ PEP_ARTICLE_STRAINER = SoupStrainer('dl')
 
 
 def whats_new(session) -> List[tuple]:
-    def scrape(session, url_prefix):
-        link = urljoin(WHATS_NEW_URL, url_prefix)
+    def scrape(session, url_suffix):
+        link = urljoin(WHATS_NEW_URL, url_suffix)
         section = get_soup(session, link).section
-        return (link, section.h1.text.rstrip('¶'),
+        return (link,
+                section.h1.text.rstrip('¶'),
                 section.dl.text.replace('\n', ' '))
-
     log_messages = []
     results = [('Ссылка на статью', 'Заголовок', 'Редактор, Автор')]
-    try:
-        for li in tqdm(
-            get_soup(session, WHATS_NEW_URL).select(
-                '#what-s-new-in-python div.toctree-wrapper li.toctree-l1')):
+    for li in tqdm(
+        get_soup(session, WHATS_NEW_URL).select(
+            '#what-s-new-in-python div.toctree-wrapper li.toctree-l1')):
+        try:
             results.append(scrape(session, li.a['href']))
-    except RequestException as exception:
-        log_messages.append(exception)
+        except Exception as exception:
+            log_messages.append(exception.format(url=li.a['href']))
     for message in log_messages:
         logging.info(message)
     return results
@@ -45,43 +45,33 @@ def whats_new(session) -> List[tuple]:
 
 def latest_versions(session) -> List[tuple]:
     results = [('Ссылка на документацию', 'Версия', 'Статус')]
-    log_messages = []
-    try:
-        for ul in get_soup(session, MAIN_DOC_URL).find(
-            'div', class_='sphinxsidebarwrapper'
-        )('ul'):
-            if 'All versions' in ul.text:
-                for tag in tqdm(ul('a')):
-                    match = re.search(
-                        r'Python (\d\.\d+) \((.*)\)', tag.text)
-                    if match:
-                        version, status = match.groups()
-                        results.append((tag['href'], version, status))
-                break
-    except RequestException as exception:
-        log_messages.append(exception)
-    for message in log_messages:
-        logging.info(message)
+    for ul in get_soup(session, MAIN_DOC_URL).find(
+        'div', class_='sphinxsidebarwrapper'
+    )('ul'):
+        if 'All versions' in ul.text:
+            for tag in tqdm(ul('a')):
+                match = re.search(
+                    r'Python (\d\.\d+) \((.*)\)', tag.text)
+                if match:
+                    version, status = match.groups()
+                    results.append((tag['href'], version, status))
+            break
     return results
 
 
 def download(session) -> None:
-    soup = get_soup(session, DOWNLOADS_URL)
     # константа определяется здесь, чтобы успокоился pytest
     DOWNLOADS_DIR = BASE_DIR / 'downloads'
     DOWNLOADS_DIR.mkdir(exist_ok=True)
-    log_messages = []
-    try:
-        for link in tqdm(soup.body.select('table.docutils a[href$=".zip"]')):
-            url = urljoin(DOWNLOADS_URL, link['href'])
-            f_name = DOWNLOADS_DIR / url.split('/')[-1]
-            with open(f_name, 'wb') as file:
-                file.write(session.get(url).content)
-            log_messages.append(DOWNLOAD_SAVED_AT.format(path=f_name))
-    except RequestException as error:
-        log_messages.append(error)
-    for message in log_messages:
-        logging.info(message)
+    for link in tqdm(
+        get_soup(
+            session,
+            DOWNLOADS_URL).body.select('table.docutils a[href$=".zip"]')):
+        url = urljoin(DOWNLOADS_URL, link['href'])
+        f_name = DOWNLOADS_DIR / url.split('/')[-1]
+        with open(f_name, 'wb') as file:
+            file.write(session.get(url).content)
+        logging.info(DOWNLOAD_SAVED_AT.format(path=f_name))
 
 
 def scrape_table(session, scrape_article) -> Iterator[str]:
@@ -93,6 +83,7 @@ def scrape_table(session, scrape_article) -> Iterator[str]:
             status_tag, link_tag = row.abbr, row.a
             if not link_tag:
                 continue
+            url = link_tag['href']
             if not status_tag:
                 log_messages.append(MISSING_DATA.format(
                     PEP=link_tag.text,
@@ -100,12 +91,12 @@ def scrape_table(session, scrape_article) -> Iterator[str]:
                 continue
             expected_status = EXPECTED_STATUS[status_tag.text[1:]]
             try:
-                actual_status = scrape_article(link_tag['href'])
+                actual_status = scrape_article(url)
             except ParserStatusMissingException:
                 log_messages.append(
-                    MISSING_STATUS.format(PEP=link_tag['href']))
-            except RequestException as exception:
-                log_messages.append(exception)
+                    MISSING_STATUS.format(PEP=url))
+            except Exception as exception:
+                log_messages.append(exception.format(PEP=url))
             if actual_status not in expected_status:
                 log_messages.append(UNEXPECTED_STATUS.format(
                     PEP=link_tag['href'],
@@ -153,8 +144,10 @@ def main() -> None:
             results = MODE_TO_FUNCTION[parser_mode](session)
             if results is not None:
                 control_output(results, args)
-    except Exception as error:
-        logging.error(error)
+    except Exception as exception:
+        logging.error(BASE_EXCEPTION_MESSAGE.format(
+            mode=parser_mode,
+            error=exception))
     logging.info('Парсер завершил работу.')
 
 
