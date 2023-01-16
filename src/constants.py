@@ -11,7 +11,7 @@ LOG_DIR = BASE_DIR / 'logs'
 PARSER_LOG_NAME = LOG_DIR / 'parser.log'
 
 # urls
-MAIN_DOC_URL = 'https://doks.python.org/3/'
+MAIN_DOC_URL = 'https://docs.python.org/3/'
 PEPS_URL = 'https://peps.python.org/'
 WHATS_NEW_URL = urljoin(MAIN_DOC_URL, 'whatsnew/')
 DOWNLOADS_URL = urljoin(MAIN_DOC_URL, 'download.html')
